@@ -12,6 +12,19 @@ pipeline {
         }
 
 
+        stage('SonarQube Code Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                    sonar-scanner \
+                    -Dsonar.projectKey=SentinelPipeline \
+                    -Dsonar.sources=.
+                    '''
+                }
+            }
+        }
+
+
         stage('Build Docker Image') {
             steps {
                 sh 'docker build -t sentinel-app .'
@@ -54,19 +67,5 @@ pipeline {
                 '''
             }
         }
-
-    }
-
-
-    post {
-
-        success {
-            echo 'SentinelPipeline completed successfully!'
-        }
-
-        failure {
-            echo 'SentinelPipeline failed. Check logs.'
-        }
-
     }
 }
