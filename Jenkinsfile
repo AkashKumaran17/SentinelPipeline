@@ -4,6 +4,7 @@ pipeline {
 
     stages {
 
+
         stage('Checkout Code') {
             steps {
                 git branch: 'main',
@@ -27,7 +28,9 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t sentinel-app .'
+                sh '''
+                docker build -t sentinel-app .
+                '''
             }
         }
 
@@ -57,17 +60,20 @@ pipeline {
                 '''
             }
         }
+
+
         stage('OWASP ZAP Security Scan') {
-           steps {
-               sh '''
-               docker run --rm \
-               --network host \
-               -v $(pwd):/zap/wrk \
-               zaproxy/zap-stable \
-               zap-baseline.py \
-               -t http://localhost:5000 \
-               -r zap-report.html
-               '''
+            steps {
+                sh '''
+                docker run --rm \
+                --user root \
+                --network host \
+                -v $(pwd):/zap/wrk \
+                zaproxy/zap-stable \
+                zap-baseline.py \
+                -t http://localhost:5000 \
+                -r /zap/wrk/zap-report.html
+                '''
             }
         }
 
@@ -80,5 +86,17 @@ pipeline {
                 '''
             }
         }
+
     }
+
+
+    post {
+
+        always {
+            archiveArtifacts artifacts: 'zap-report.html',
+            allowEmptyArchive: true
+        }
+
+    }
+
 }
