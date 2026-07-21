@@ -4,7 +4,6 @@ pipeline {
 
     stages {
 
-
         stage('Checkout Code') {
             steps {
                 git branch: 'main',
@@ -41,6 +40,7 @@ pipeline {
                 trivy image \
                 --severity HIGH,CRITICAL \
                 --exit-code 0 \
+                --format table \
                 sentinel-app
                 '''
             }
@@ -72,7 +72,7 @@ pipeline {
                 zaproxy/zap-stable \
                 zap-baseline.py \
                 -t http://localhost:5000 \
-                -r /zap/wrk/zap-report.html
+                -r zap-report.html
                 '''
             }
         }
@@ -93,8 +93,21 @@ pipeline {
     post {
 
         always {
+
             archiveArtifacts artifacts: 'zap-report.html',
             allowEmptyArchive: true
+
+            echo 'Pipeline execution completed'
+        }
+
+
+        success {
+            echo 'SentinelPipeline completed successfully'
+        }
+
+
+        failure {
+            echo 'SentinelPipeline failed. Check logs.'
         }
 
     }
